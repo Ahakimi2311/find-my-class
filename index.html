@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Find My Class</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+4SzFeyNhdU0rmcDtzW8CaaJg1Z9ePh4rT0nlzKr4="
+    crossorigin=""
+  />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+
+    select, input, button {
+      margin: 10px 0;
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    .map-container {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .map-wrapper {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #ccc;
+    }
+
+    .pinch-zoom {
+      width: 100%;
+      position: relative;
+    }
+
+    #floorMap {
+      display: block;
+      width: 100%;
+    }
+
+    .marker {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: red;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #leafletMap {
+      margin-top: 40px;
+      width: 100%;
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Find My Class or Lab</h1>
+
+  <label for="searchType">Choose what to find:</label>
+  <select id="searchType" onchange="updateUI()">
+    <option value="class">Class</option>
+    <option value="lab">Lab</option>
+  </select>
+
+  <div id="classForm">
+    <label for="className">Enter Class Code (e.g. E2-1-2):</label>
+    <input type="text" id="className" placeholder="E2-1-2" />
+  </div>
+
+  <div id="labForm" style="display:none;">
+    <label for="labList">Choose a Lab:</label>
+    <select id="labList">
+      <option value="E2-1-2">Lab A (E2-1-2)</option>
+      <option value="E1-2-1">Lab B (E1-2-1)</option>
+      <option value="E0-1-1">Lab C (E0-1-1)</option>
+    </select>
+  </div>
+
+  <button onclick="handleSearch()">Find</button>
+
+  <div class="map-container" id="mapContainer">
+    <div class="map-wrapper">
+      <div class="pinch-zoom" id="pinchZoom">
+        <img id="floorMap" src="" alt="Floor Plan" />
+        <div id="marker" class="marker" title="Your class is here"></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Your Current Location</h2>
+  <div id="leafletMap"></div>
+
+  <script>
+    const classCoordinates = {
+      "E2-1-2": { building: "E2-3", floor: 1, x: 120, y: 90 },
+      "E2-1-3": { building: "E2-3", floor: 1, x: 220, y: 160 },
+      "E1-2-1": { building: "E1", floor: 2, x: 300, y: 110 },
+      "E0-1-1": { building: "E0", floor: 1, x: 150, y: 100 }
+    };
+
+    function updateUI() {
+      const type = document.getElementById("searchType").value;
+      document.getElementById("classForm").style.display = type === "class" ? "block" : "none";
+      document.getElementById("labForm").style.display = type === "lab" ? "block" : "none";
+    }
+
+    function handleSearch() {
+      const type = document.getElementById("searchType").value;
+      let name = "", building = "", floor = 1;
+
+      if (type === "class") {
+        name = document.getElementById("className").value.trim().toUpperCase();
+
+        if (!/E\d(-\d+){2}/.test(name)) {
+          alert("Invalid class code format. Use format like E2-1-2.");
+          return;
+        }
+
+        const location = classCoordinates[name];
+        if (!location) {
+          alert("Class location not found.");
+          return;
+        }
+
+        building = location.building;
+        floor = location.floor;
+        showMap(building, floor, location.x, location.y);
+
+      } else if (type === "lab") {
+        name = document.getElementById("labList").value;
+        const location = classCoordinates[name];
+
+        if (!location) {
+          alert("Lab location not found.");
+          return;
+        }
+
+        showMap(location.building, location.floor, location.x, location.y);
+      }
+    }
+
+    function showMap(building, floor, x, y) {
+      const imgPath = `${building}/floor${floor}.png`;
+      const img = document.getElementById("floorMap");
+      const marker = document.getElementById("marker");
+
+      img.src = imgPath;
+
+      img.onload = () => {
+        const scaleX = img.width / img.naturalWidth;
+        const scaleY = img.height / img.naturalHeight;
+
+        marker.style.left = `${x * scaleX}px`;
+        marker.style.top = `${y * scaleY}px`;
+
+        document.getElementById("mapContainer").style.display = "block";
+        marker.style.display = "block";
+      };
+    }
+  </script>
+
+  <!-- PinchZoom.js for interactive image -->
+  <script src="https://unpkg.com/@manuelstofer/pinchzoom@2.3.4/dist/pinch-zoom.umd.js"></script>
+  <script>
+    new PinchZoom(document.getElementById('pinchZoom'), { draggableUnzoomed: true });
+  </script>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1jrvv7kNQ/qkJrUu78OHiKxvbH6cJ8f1ztNChE+k="
+    crossorigin=""
+  ></script>
+
+  <script>
+    function initLeaflet() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const userLoc = [position.coords.latitude, position.coords.longitude];
+
+          const map = L.map('leafletMap').setView(userLoc, 17);
+
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+          }).addTo(map);
+
+          L.marker(userLoc)
+            .addTo(map)
+            .bindPopup('You are here.')
+            .openPopup();
+        }, () => {
+          alert('Failed to get your location.');
+        });
+      } else {
+        alert('Geolocation not supported by your browser.');
+      }
+    }
+
+    window.onload = initLeaflet;
+  </script>
+</body>
+</html>
