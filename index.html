@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Find My Class</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+
+    select, input, button {
+      margin: 10px 0;
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    #floorMapContainer {
+      width: 100%;
+      height: 500px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      overflow: hidden;
+      position: relative;
+      touch-action: none;
+    }
+
+    #floorImage {
+      width: 1000px;
+      height: auto;
+      transform-origin: top left;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Find My Class or Lab</h1>
+
+  <label for="searchType">Choose what to find:</label>
+  <select id="searchType" onchange="updateUI()">
+    <option value="class">Class</option>
+    <option value="lab">Lab</option>
+  </select>
+
+  <div id="classForm">
+    <label for="className">Enter Class Code (e.g. E2-1-2):</label>
+    <input type="text" id="className" placeholder="E2-1-2" />
+  </div>
+
+  <div id="labForm" style="display:none;">
+    <label for="labList">Choose a Lab:</label>
+    <select id="labList">
+      <option value="E2-1-2">Lab A (E2-1-2)</option>
+      <option value="E1-2-1">Lab B (E1-2-1)</option>
+      <option value="E0-1-1">Lab C (E0-1-1)</option>
+    </select>
+  </div>
+
+  <button onclick="handleSearch()">Find</button>
+
+  <div id="floorMapContainer">
+    <img id="floorImage" src="" alt="Floor Plan" />
+  </div>
+
+  <script>
+    const classCoordinates = {
+      "E2-1-2": { building: "E2-3", floor: 1, x: 300, y: 200 },
+      "E1-2-1": { building: "E1", floor: 2, x: 400, y: 250 },
+      "E0-1-1": { building: "E0", floor: 1, x: 200, y: 150 }
+    };
+
+    function updateUI() {
+      const type = document.getElementById("searchType").value;
+      document.getElementById("classForm").style.display = type === "class" ? "block" : "none";
+      document.getElementById("labForm").style.display = type === "lab" ? "block" : "none";
+    }
+
+    function handleSearch() {
+      const type = document.getElementById("searchType").value;
+      let name = "";
+
+      if (type === "class") {
+        name = document.getElementById("className").value.trim().toUpperCase();
+        if (!/E\d-\d-\d/.test(name)) {
+          alert("Invalid class code format. Use format like E2-1-2.");
+          return;
+        }
+      } else {
+        name = document.getElementById("labList").value;
+      }
+
+      const location = classCoordinates[name];
+      if (!location) {
+        alert("Location not found.");
+        return;
+      }
+
+      const img = document.getElementById("floorImage");
+      img.src = `${location.building}/floor${location.floor}.png`;
+    }
+
+    // Simple zoom feature
+    let scale = 1;
+    const floorImage = document.getElementById("floorImage");
+    const container = document.getElementById("floorMapContainer");
+
+    container.addEventListener("wheel", function(event) {
+      event.preventDefault();
+      const zoomIntensity = 0.1;
+      if (event.deltaY < 0) {
+        scale += zoomIntensity;
+      } else {
+        scale = Math.max(0.5, scale - zoomIntensity);
+      }
+      floorImage.style.transform = `scale(${scale})`;
+    });
+  </script>
+</body>
+</html>
