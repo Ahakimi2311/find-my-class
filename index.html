@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Find My Class</title>
   <style>
     body {
@@ -53,34 +53,35 @@
   <button onclick="showClass()">Find</button>
 
   <div id="map-container">
-    <img id="map" src="" alt="Floor layout will appear here">
+    <img id="map" src="" alt="Floor layout will appear here" />
     <div id="marker" class="marker"></div>
   </div>
 
   <script>
-    // Example class data — add your real coordinates and floor plans
     const classData = {
-      "E204": { floor: "floor2.png", x: 460, y: 290 },
-      "E101": { floor: "floor1.png", x: 300, y: 200 },
-      "E0L01": { floor: "e0.png", x: 350, y: 250 },
-      "E312": { floor: "e3.png", x: 410, y: 180 }
+      "E0204": { floor: "floor2.png", x: 460, y: 290 },
+      "E0101": { floor: "floor1.png", x: 300, y: 200 },
+      "E0L01": { floor: "floor1.png", x: 350, y: 250 },
+      "E3312": { floor: "floor3.png", x: 410, y: 180 }
     };
 
     function showClass() {
-      const building = document.getElementById('buildingSelect').value;
-      const room = document.getElementById('classInput').value.trim();
+      const building = document.getElementById("buildingSelect").value;
+      const room = document.getElementById("classInput").value.trim();
       const classCode = (building + room).toUpperCase();
       const data = classData[classCode];
-      const map = document.getElementById('map');
-      const marker = document.getElementById('marker');
+      const map = document.getElementById("map");
+      const marker = document.getElementById("marker");
 
       if (!data) {
         alert("Classroom not found!");
         marker.style.display = "none";
+        map.src = "";
         return;
       }
 
-      map.src = data.floor;
+      const imagePath = `${building}/${data.floor}`;
+      map.src = imagePath;
 
       map.onload = () => {
         marker.style.left = data.x + "px";
