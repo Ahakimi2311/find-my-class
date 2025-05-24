@@ -8,19 +8,19 @@
       font-family: Arial, sans-serif;
       padding: 20px;
     }
-
+    label, select, input, button {
+      margin: 5px;
+    }
     #map-container {
       position: relative;
-      width: 600px;
+      width: 800px;
       margin-top: 20px;
       border: 2px solid #ccc;
     }
-
     #map {
       width: 100%;
       display: block;
     }
-
     .marker {
       position: absolute;
       width: 20px;
@@ -37,7 +37,19 @@
 <body>
 
   <h1>Find My Class</h1>
-  <input type="text" id="classInput" placeholder="Enter classroom code (e.g., E204)">
+
+  <label for="buildingSelect">Building:</label>
+  <select id="buildingSelect">
+    <option value="E0">E0</option>
+    <option value="E1">E1</option>
+    <option value="E2">E2</option>
+    <option value="E3">E3</option>
+    <option value="E4">E4</option>
+    <option value="E5">E5</option>
+  </select>
+
+  <label for="classInput">Room:</label>
+  <input type="text" id="classInput" placeholder="e.g. 204">
   <button onclick="showClass()">Find</button>
 
   <div id="map-container">
@@ -46,16 +58,19 @@
   </div>
 
   <script>
-    // Dummy class coordinates
+    // Example class data — add your real coordinates and floor plans
     const classData = {
-      "E204": { floor: "floor2.png", x: 320, y: 180 },
-      "G101": { floor: "floor1.png", x: 150, y: 220 },
-      "B305": { floor: "floor3.png", x: 400, y: 100 }
+      "E204": { floor: "floor2.png", x: 460, y: 290 },
+      "E101": { floor: "floor1.png", x: 300, y: 200 },
+      "E0L01": { floor: "e0.png", x: 350, y: 250 },
+      "E312": { floor: "e3.png", x: 410, y: 180 }
     };
 
     function showClass() {
-      const input = document.getElementById('classInput').value.trim().toUpperCase();
-      const data = classData[input];
+      const building = document.getElementById('buildingSelect').value;
+      const room = document.getElementById('classInput').value.trim();
+      const classCode = (building + room).toUpperCase();
+      const data = classData[classCode];
       const map = document.getElementById('map');
       const marker = document.getElementById('marker');
 
