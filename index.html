@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Find My Class</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+
+    select, input, button {
+      margin: 10px 0;
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    #floorMapContainer {
+      width: 100%;
+      height: 500px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      overflow: hidden;
+      position: relative;
+      touch-action: none;
+      cursor: grab;
+      display: none; /* Initially hide the container */
+    }
+
+    #floorContent {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: top left;
+    }
+
+    #floorImage {
+      width: 1000px;
+      height: auto;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #marker {
+      width: 20px;
+      height: 20px;
+      background: red;
+      border-radius: 50%;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      display: none; /* Initially hide the marker */
+    }
+
+    #leafletMap {
+      height: 400px;
+      margin-top: 20px;
+    }
+
+    /* Styles for the auditorium form, initially hidden */
+    #auditoriumForm {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Find My Class </h1>
+
+  <label for="searchType">Choose what to find:</label>
+  <select id="searchType" onchange="updateUI()">
+    <option value="class">Class</option>
+    <option value="lab">Lab</option>
+    <option value="auditorium">Auditorium</option> </select>
+
+  <div id="classForm">
+    <label for="className">Enter Class Code (e.g. E2-1-2):</label>
+    <input type="text" id="className" placeholder="E2-1-2" />
+  </div>
+
+  <div id="labForm" style="display:none;">
+    <label for="labList">Choose a Lab:</label>
+    <select id="labList">
+      <option value="E2-1-2">Lab A (E2-1-2)</option>
+      <option value="E1-2-1">Lab B (E1-2-1)</option>
+      <option value="E0-1-1">Lab C (E0-1-1)</option>
+    </select>
+  </div>
+
+  <div id="auditoriumForm"> <label for="auditoriumList">Choose an Auditorium:</label>
+    <select id="auditoriumList">
+      <option value="E2-G-1">Auditorium A (E2-G-1)</option>
+      <option value="E1-F-2">Auditorium B (E1-F-2)</option>
+      <option value="E5-L-1">Auditorium C (E5-L-1)</option>
+    </select>
+  </div>
+
+  <button onclick="handleSearch()">Find</button>
+
+  <div id="floorMapContainer">
+    <div id="floorContent">
+      <img id="floorImage" src="" alt="Floor Plan" />
+      <div id="marker"></div>
+    </div>
+  </div>
+
+  <div id="leafletMap"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Coordinates for classes
+    const classCoordinates = {
+      "E2-1-2": { building: "E2-3", floor: 1, x: 300, y: 200 },
+      "E1-2-1": { building: "E1", floor: 2, x: 400, y: 250 },
+      "E0-1-1": { building: "E0", floor: 1, x: 200, y: 150 },
+      "E5-2-2": { building: "E5", floor: 2, x: 350, y: 220 }
+    };
+
+    // Coordinates for labs (currently same as some classes for example)
+    const labCoordinates = {
+      "E2-1-2": { building: "E2-3", floor: 1, x: 300, y: 200 }, // Lab A
+      "E1-2-1": { building: "E1", floor: 2, x: 400, y: 250 }, // Lab B
+      "E0-1-1": { building: "E0", floor: 1, x: 200, y: 150 }  // Lab C
+    };
+
+    // Coordinates for auditoriums
+    const auditoriumCoordinates = {
+      "E2-G-1": { building: "E2", floor: "G", x: 500, y: 300 }, // Auditorium A
+      "E1-F-2": { building: "E1", floor: "F", x: 250, y: 180 }, // Auditorium B
+      "E5-L-1": { building: "E5", floor: "L", x: 600, y: 400 }  // Auditorium C
+    };
+
+    // Geographic locations of buildings for the Leaflet map
+    const buildingLocations = {
+      "E0": [3.2526926942784185, 101.73270387281318],
+      "E1": [3.2526498480705093, 101.73149151435635],
+      "E2": [3.2528261533622937, 101.73076697046658],
+      "E3": [3.2533864019322096, 101.73116761281234],
+      "E4": [3.2538142485603547, 101.73192995827635],
+      "E5": [3.2534791003113788, 101.73295134184778]
+    };
+
+    /**
+     * Updates the visibility of the input forms based on the selected search type.
+     */
+    function updateUI() {
+      const type = document.getElementById("searchType").value;
+      document.getElementById("classForm").style.display = type === "class" ? "block" : "none";
+      document.getElementById("labForm").style.display = type === "lab" ? "block" : "none";
+      document.getElementById("auditoriumForm").style.display = type === "auditorium" ? "block" : "none";
+    }
+
+    /**
+     * Handles the search functionality based on the selected type (class, lab, or auditorium).
+     * Displays the floor plan and marks the location, and updates the Leaflet map.
+     */
+    function handleSearch() {
+      const type = document.getElementById("searchType").value;
+      let name = "";
+      let location = null; // Variable to hold the found location data
+
+      // Determine which input to use and which coordinate data to search
+      if (type === "class") {
+        name = document.getElementById("className").value.trim().toUpperCase();
+        // Validate class code format
+        if (!/E\d-\d-\d/.test(name)) {
+          alert("Invalid class code format. Use format like E2-1-2.");
+          return;
+        }
+        location = classCoordinates[name];
+      } else if (type === "lab") {
+        name = document.getElementById("labList").value;
+        location = labCoordinates[name];
+      } else if (type === "auditorium") { // Handle auditorium search
+        name = document.getElementById("auditoriumList").value;
+        location = auditoriumCoordinates[name];
+      }
+
+      // If location is not found, alert the user and stop
+      if (!location) {
+        alert("Location not found.");
+        return;
+      }
+
+      const img = document.getElementById("floorImage");
+      const marker = document.getElementById("marker");
+      const floorMapContainer = document.getElementById("floorMapContainer");
+
+      // Set the image source for the floor plan
+      img.src = `${location.building}/floor${location.floor}.png`;
+
+      // When the image loads successfully, display the marker and container
+      img.onload = () => {
+        marker.style.display = "block";
+        marker.style.left = `${location.x}px`;
+        marker.style.top = `${location.y}px`;
+        floorMapContainer.style.display = "block";
+      };
+
+      // If there's an error loading the image, hide the container and marker, and alert the user
+      img.onerror = () => {
+        alert("Error loading floor plan image. Please ensure the image path is correct.");
+        floorMapContainer.style.display = "none";
+        marker.style.display = "none";
+      };
+
+      // Update the Leaflet map to show the building location
+      // Extract the main building code (e.g., "E2" from "E2-3")
+      const buildingCode = location.building.split("-")[0];
+      const coords = buildingLocations[buildingCode];
+
+      if (coords) {
+        // Remove existing building marker if any
+        if (buildingMarker) {
+          map.removeLayer(buildingMarker);
+        }
+        // Add a new marker for the building and set map view
+        buildingMarker = L.marker(coords).addTo(map).bindPopup(`${buildingCode} Building`).openPopup();
+        map.setView(coords, 18);
+      } else {
+        console.warn(`Building coordinates not found for ${buildingCode}`);
+      }
+    }
+
+    // Floor plan zoom and drag logic
+    let scale = 1;
+    let isDragging = false;
+    let origin = { x: 0, y: 0 };
+    let translate = { x: 0, y: 0 };
+
+    const floorContent = document.getElementById("floorContent");
+    const container = document.getElementById("floorMapContainer");
+
+    /**
+     * Applies the current scale and translation to the floor plan content.
+     */
+    function updateTransform() {
+      floorContent.style.transform = `translate(${translate.x}px, ${translate.y}px) scale(${scale})`;
+    }
+
+    // Event listener for mouse wheel (zoom)
+    container.addEventListener("wheel", function(event) {
+      event.preventDefault(); // Prevent page scrolling
+      const zoomIntensity = 0.1;
+      if (event.deltaY < 0) { // Zoom in
+        scale += zoomIntensity;
+      } else { // Zoom out
+        scale = Math.max(0.5, scale - zoomIntensity); // Prevent zooming out too much
+      }
+      updateTransform();
+    });
+
+    // Event listeners for mouse drag (pan)
+    container.addEventListener("mousedown", function(e) {
+      isDragging = true;
+      origin.x = e.clientX - translate.x;
+      origin.y = e.clientY - translate.y;
+      container.style.cursor = "grabbing"; // Change cursor to grabbing
+    });
+
+    container.addEventListener("mouseup", function() {
+      isDragging = false;
+      container.style.cursor = "grab"; // Change cursor back to grab
+    });
+
+    container.addEventListener("mouseleave", function() {
+      isDragging = false;
+      container.style.cursor = "grab"; // Change cursor back if mouse leaves container
+    });
+
+    container.addEventListener("mousemove", function(e) {
+      if (!isDragging) return; // Only pan if dragging
+      translate.x = e.clientX - origin.x;
+      translate.y = e.clientY - origin.y;
+      updateTransform();
+    });
+
+    // Initialize Leaflet map
+    const map = L.map('leafletMap').setView([3.124, 101.652], 17); // Default view
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Variable to hold the building marker on the Leaflet map
+    let buildingMarker = null;
+
+    /**
+     * Callback function for when user's location is found by Leaflet.
+     * Adds a marker for the user's current location.
+     */
+    function onLocationFound(e) {
+      L.marker(e.latlng).addTo(map).bindPopup("You are here").openPopup();
+    }
+    // Listen for location found event
+    map.on('locationfound', onLocationFound);
+    // Request user's location on page load
+    map.locate({ setView: true, maxZoom: 17 });
+
+    // Call updateUI initially to set the correct form visibility on page load
+    updateUI();
+  </script>
+</body>
+</html>
