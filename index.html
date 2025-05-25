@@ -6,116 +6,62 @@
   <title>Find My Class</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 700px;
-      margin: auto;
-    }
-
-    select, input, button {
-      margin: 10px 0;
-      padding: 8px;
-      font-size: 16px;
-      width: 100%;
-    }
-
-    #floorMapContainer {
-      width: 100%;
-      height: 500px;
-      margin-top: 20px;
-      border: 1px solid #ccc;
-      overflow: hidden;
-      position: relative;
-      touch-action: none;
-      cursor: grab;
-      display: none;
-    }
-
-    #floorContent {
-      position: absolute;
-      top: 0;
-      left: 0;
-      transform-origin: top left;
-    }
-
-    #floorImage {
-      width: 1000px;
-      height: auto;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    #marker {
-      width: 20px;
-      height: 20px;
-      background: red;
-      border-radius: 50%;
-      position: absolute;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      display: none;
-    }
-
-    #leafletMap {
-      height: 400px;
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Find My Class</h1>
+  <div class="overlay"></div>
+  <div class="content">
+    <h1>Find My Class</h1>
 
-  <label for="searchType">Choose what to find:</label>
-  <select id="searchType" onchange="updateUI()">
-    <option value="class">Class</option>
-    <option value="lab">Lab</option>
-    <option value="auditorium">Auditorium</option>
-    <option value="examHall">Exam Hall</option>
-  </select>
-
-  <div id="classForm">
-    <label for="className">Enter Class Code (e.g. E2-1-2):</label>
-    <input type="text" id="className" placeholder="E2-1-2" />
-  </div>
-
-  <div id="labForm" style="display:none;">
-    <label for="labList">Choose a Lab:</label>
-    <select id="labList">
-      <option value="E2-1-2">Lab A (E2-1-2)</option>
-      <option value="E1-2-1">Lab B (E1-2-1)</option>
-      <option value="E0-1-1">Lab C (E0-1-1)</option>
+    <label for="searchType">Choose what to find:</label>
+    <select id="searchType" onchange="updateUI()">
+      <option value="class">Class</option>
+      <option value="lab">Lab</option>
+      <option value="auditorium">Auditorium</option>
+      <option value="examHall">Exam Hall</option>
     </select>
-  </div>
 
-  <div id="auditoriumForm" style="display:none;">
-    <label for="auditoriumList">Choose an Auditorium:</label>
-    <select id="auditoriumList">
-      <option value="AUD-A">Main Auditorium (AUD-A)</option>
-      <option value="AUD-B">Auditorium B (AUD-B)</option>
-    </select>
-  </div>
-
-  <div id="examHallForm" style="display:none;">
-    <label for="examHallList">Choose an Exam Hall:</label>
-    <select id="examHallList">
-      <option value="EXAM-1">Exam Hall 1 (EXAM-1)</option>
-      <option value="EXAM-2">Exam Hall 2 (EXAM-2)</option>
-    </select>
-  </div>
-
-  <button onclick="handleSearch()">Find</button>
-
-  <div id="floorMapContainer">
-    <div id="floorContent">
-      <img id="floorImage" src="" alt="Floor Plan" />
-      <div id="marker"></div>
+    <div id="classForm">
+      <label for="className">Enter Class Code (e.g. E2-1-2):</label>
+      <input type="text" id="className" placeholder="E2-1-2" />
     </div>
-  </div>
 
-  <div id="leafletMap"></div>
+    <div id="labForm" style="display:none;">
+      <label for="labList">Choose a Lab:</label>
+      <select id="labList">
+        <option value="E2-1-2">Lab A (E2-1-2)</option>
+        <option value="E1-2-1">Lab B (E1-2-1)</option>
+        <option value="E0-1-1">Lab C (E0-1-1)</option>
+      </select>
+    </div>
+
+    <div id="auditoriumForm" style="display:none;">
+      <label for="auditoriumList">Choose an Auditorium:</label>
+      <select id="auditoriumList">
+        <option value="AUD-A">Main Auditorium (AUD-A)</option>
+        <option value="AUD-B">Auditorium B (AUD-B)</option>
+      </select>
+    </div>
+
+    <div id="examHallForm" style="display:none;">
+      <label for="examHallList">Choose an Exam Hall:</label>
+      <select id="examHallList">
+        <option value="EXAM-1">Exam Hall 1 (EXAM-1)</option>
+        <option value="EXAM-2">Exam Hall 2 (EXAM-2)</option>
+      </select>
+    </div>
+
+    <button onclick="handleSearch()">Find</button>
+
+    <div id="floorMapContainer">
+      <div id="floorContent">
+        <img id="floorImage" src="" alt="Floor Plan" />
+        <div id="marker"></div>
+      </div>
+    </div>
+
+    <div id="leafletMap"></div>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
