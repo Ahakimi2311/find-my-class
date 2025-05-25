@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Find My Class</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -30,7 +30,7 @@
       position: relative;
       touch-action: none;
       cursor: grab;
-      display: none; /* Initially hide the container */
+      display: none;
     }
 
     #floorContent {
@@ -56,7 +56,7 @@
       position: absolute;
       transform: translate(-50%, -50%);
       z-index: 10;
-      display: none; /* Initially hide the marker */
+      display: none;
     }
 
     #leafletMap {
@@ -66,12 +66,14 @@
   </style>
 </head>
 <body>
-  <h1>Find My Class </h1>
+  <h1>Find My Class</h1>
 
   <label for="searchType">Choose what to find:</label>
   <select id="searchType" onchange="updateUI()">
     <option value="class">Class</option>
     <option value="lab">Lab</option>
+    <option value="auditorium">Auditorium</option>
+    <option value="examHall">Exam Hall</option>
   </select>
 
   <div id="classForm">
@@ -85,6 +87,22 @@
       <option value="E2-1-2">Lab A (E2-1-2)</option>
       <option value="E1-2-1">Lab B (E1-2-1)</option>
       <option value="E0-1-1">Lab C (E0-1-1)</option>
+    </select>
+  </div>
+
+  <div id="auditoriumForm" style="display:none;">
+    <label for="auditoriumList">Choose an Auditorium:</label>
+    <select id="auditoriumList">
+      <option value="AUD-A">Main Auditorium (AUD-A)</option>
+      <option value="AUD-B">Auditorium B (AUD-B)</option>
+    </select>
+  </div>
+
+  <div id="examHallForm" style="display:none;">
+    <label for="examHallList">Choose an Exam Hall:</label>
+    <select id="examHallList">
+      <option value="EXAM-1">Exam Hall 1 (EXAM-1)</option>
+      <option value="EXAM-2">Exam Hall 2 (EXAM-2)</option>
     </select>
   </div>
 
@@ -105,7 +123,11 @@
       "E2-1-2": { building: "E2-3", floor: 1, x: 300, y: 200 },
       "E1-2-1": { building: "E1", floor: 2, x: 400, y: 250 },
       "E0-1-1": { building: "E0", floor: 1, x: 200, y: 150 },
-      "E5-2-2": { building: "E5", floor: 2, x: 350, y: 220 }
+      "E5-2-2": { building: "E5", floor: 2, x: 350, y: 220 },
+      "AUD-A": { building: "E4", floor: 1, x: 180, y: 120 },
+      "AUD-B": { building: "E3", floor: 2, x: 220, y: 180 },
+      "EXAM-1": { building: "E2", floor: 3, x: 280, y: 230 },
+      "EXAM-2": { building: "E1", floor: 3, x: 240, y: 200 }
     };
 
     const buildingLocations = {
@@ -121,6 +143,8 @@
       const type = document.getElementById("searchType").value;
       document.getElementById("classForm").style.display = type === "class" ? "block" : "none";
       document.getElementById("labForm").style.display = type === "lab" ? "block" : "none";
+      document.getElementById("auditoriumForm").style.display = type === "auditorium" ? "block" : "none";
+      document.getElementById("examHallForm").style.display = type === "examHall" ? "block" : "none";
     }
 
     function handleSearch() {
@@ -129,12 +153,16 @@
 
       if (type === "class") {
         name = document.getElementById("className").value.trim().toUpperCase();
-        if (!/E\d-\d-\d/.test(name)) {
+        if (!/^E\d-\d-\d$/.test(name)) {
           alert("Invalid class code format. Use format like E2-1-2.");
           return;
         }
-      } else {
+      } else if (type === "lab") {
         name = document.getElementById("labList").value;
+      } else if (type === "auditorium") {
+        name = document.getElementById("auditoriumList").value;
+      } else if (type === "examHall") {
+        name = document.getElementById("examHallList").value;
       }
 
       const location = classCoordinates[name];
@@ -152,6 +180,8 @@
       img.onload = () => {
         marker.style.display = "block";
         floorMapContainer.style.display = "block";
+        marker.style.left = `${location.x}px`;
+        marker.style.top = `${location.y}px`;
       };
 
       img.onerror = () => {
@@ -160,8 +190,7 @@
         marker.style.display = "none";
       };
 
-      // Show building on leaflet map
-      const buildingCode = location.building.split("-")[0]; // E2-3 → E2
+      const buildingCode = location.building.split("-")[0];
       const coords = buildingLocations[buildingCode];
       if (coords) {
         if (buildingMarker) {
@@ -169,17 +198,14 @@
         }
         buildingMarker = L.marker(coords).addTo(map).bindPopup(`${buildingCode} Building`).openPopup();
         map.setView(coords, 18);
-      } else {
-        console.warn(`Building coordinates not found for ${buildingCode}`);
       }
     }
 
-    // Floor plan zoom/drag logic
+    // Zoom and drag for floor plan
     let scale = 1;
     let isDragging = false;
     let origin = { x: 0, y: 0 };
     let translate = { x: 0, y: 0 };
-
     const floorContent = document.getElementById("floorContent");
     const container = document.getElementById("floorMapContainer");
 
@@ -190,11 +216,7 @@
     container.addEventListener("wheel", function(event) {
       event.preventDefault();
       const zoomIntensity = 0.1;
-      if (event.deltaY < 0) {
-        scale += zoomIntensity;
-      } else {
-        scale = Math.max(0.5, scale - zoomIntensity);
-      }
+      scale = event.deltaY < 0 ? scale + zoomIntensity : Math.max(0.5, scale - zoomIntensity);
       updateTransform();
     });
 
@@ -205,12 +227,12 @@
       container.style.cursor = "grabbing";
     });
 
-    container.addEventListener("mouseup", function() {
+    container.addEventListener("mouseup", () => {
       isDragging = false;
       container.style.cursor = "grab";
     });
 
-    container.addEventListener("mouseleave", function() {
+    container.addEventListener("mouseleave", () => {
       isDragging = false;
       container.style.cursor = "grab";
     });
@@ -228,13 +250,11 @@
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Show user location
     map.locate({ setView: true, maxZoom: 17 });
     let buildingMarker = null;
-    function onLocationFound(e) {
+    map.on('locationfound', function(e) {
       L.marker(e.latlng).addTo(map).bindPopup("You are here").openPopup();
-    }
-    map.on('locationfound', onLocationFound);
+    });
   </script>
 </body>
 </html>
