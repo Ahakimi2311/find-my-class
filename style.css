@@ -6,10 +6,6 @@ body {
     font-family: Arial, sans-serif;
     color: #333; /* Default text color */
     line-height: 1.6;
-}
-
-/* Background image */
-body {
     background-image: url('your-background-image.jpg'); /* Replace with your image path */
     background-size: cover;
     background-repeat: no-repeat;
@@ -38,6 +34,21 @@ h1 {
     border-radius: 5px;
 }
 
+/* Controls container for "Choose what to find" and "Find" button */
+.controls-container {
+    display: flex;
+    gap: 10px; /* Space between elements */
+    margin-bottom: 10px;
+    max-width: 600px; /* Limit width like other elements */
+    margin-left: auto;
+    margin-right: auto;
+    align-items: flex-start; /* Align items to the top */
+}
+
+.controls-container > div {
+    flex: 1; /* Distribute available space equally */
+}
+
 /* Form elements */
 label {
     display: block;
@@ -59,7 +70,6 @@ input[type="text"] {
 }
 
 button {
-    width: 100%;
     padding: 10px;
     font-size: 16px;
     background-color: #007bff; /* Example button color */
@@ -68,6 +78,8 @@ button {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    /* Take up the remaining space in the controls container */
+    flex-basis: auto;
 }
 
 button:hover {
@@ -77,8 +89,8 @@ button:hover {
 /* Container for the floor map */
 #floorMapContainer {
     width: 100%;
-    max-width: 600px; /* Adjust as needed */
-    height: 500px;
+    max-width: 800px; /* Match leaflet map's max-width */
+    height: 400px; /* Match leaflet map's height */
     margin: 20px auto;
     border: 1px solid #ccc;
     overflow: hidden;
@@ -175,5 +187,16 @@ button:hover {
     #auditoriumForm {
         margin: 15px auto;
         padding: 15px;
+    }
+
+    .controls-container {
+        flex-direction: column; /* Stack elements on smaller screens */
+    }
+
+    .controls-container > div,
+    .controls-container > button {
+        flex: none;
+        width: 100%;
+        margin-bottom: 10px; /* Add some spacing between stacked elements */
     }
 }

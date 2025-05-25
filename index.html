@@ -6,6 +6,196 @@
     <title>Find My Class</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Adjustments for "Choose what to find" and "Find" container */
+        .controls-container {
+            display: flex;
+            gap: 10px; /* Space between elements */
+            margin-bottom: 10px;
+            max-width: 600px; /* Limit width like other elements */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .controls-container > div {
+            flex: 1; /* Distribute available space equally */
+        }
+
+        /* Adjustments for floor plan and leaflet map container sizes */
+        #floorMapContainer,
+        #leafletMap {
+            width: 100%;
+            max-width: 800px; /* Match leaflet map's max-width */
+            height: 400px; /* Match leaflet map's height */
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            overflow: hidden;
+            position: relative;
+            touch-action: none;
+            cursor: grab;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            display: none; /* Hidden by default */
+        }
+
+        #leafletMap {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Adjustments for form element widths */
+        #classForm label,
+        #labForm label,
+        #auditoriumForm label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #classForm input[type="text"],
+        #labForm select,
+        #auditoriumForm select {
+            width: calc(100% - 16px); /* Adjust for padding */
+            padding: 8px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Existing styles remain */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-image: url('your-background-image.jpg'); /* Replace with your image path */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
+        }
+
+        .logo-container {
+            padding: 20px;
+            text-align: left;
+        }
+
+        .logo-container img {
+            max-height: 80px;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            margin: 20px auto;
+            max-width: 600px;
+            border-radius: 5px;
+        }
+
+        #floorContent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: top left;
+        }
+
+        #floorImage {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #marker {
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: none;
+        }
+
+        #classForm,
+        #labForm,
+        #auditoriumForm {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            margin: 10px auto;
+            max-width: 600px;
+            border-radius: 5px;
+        }
+
+        #labForm,
+        #auditoriumForm {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size: 2em;
+                padding: 15px;
+                margin: 15px auto;
+            }
+
+            select,
+            input[type="text"],
+            button {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .logo-container {
+                padding: 15px;
+            }
+
+            .logo-container img {
+                max-height: 60px;
+            }
+
+            #floorMapContainer,
+            #leafletMap,
+            #classForm,
+            #labForm,
+            #auditoriumForm {
+                margin: 15px auto;
+                padding: 15px;
+            }
+
+            .controls-container {
+                flex-direction: column; /* Stack elements on smaller screens */
+            }
+
+            .controls-container > div {
+                flex: none;
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="logo-container">
@@ -14,16 +204,20 @@
 
     <h1>Find My Class</h1>
 
-    <label for="searchType">Choose what to find:</label>
-    <select id="searchType" onchange="updateUI()">
-        <option value="class">Class</option>
-        <option value="lab">Lab</option>
-        <option value="auditorium">Auditorium</option>
-    </select>
-
-    <div id="classForm">
-        <label for="className">Enter Class Code (e.g. E2-1-2):</label>
-        <input type="text" id="className" placeholder="E2-1-2" />
+    <div class="controls-container">
+        <div>
+            <label for="searchType">Choose what to find:</label>
+            <select id="searchType" onchange="updateUI()">
+                <option value="class">Class</option>
+                <option value="lab">Lab</option>
+                <option value="auditorium">Auditorium</option>
+            </select>
+        </div>
+        <div>
+            <label for="className">Enter Class Code (e.g. E2-1-2):</label>
+            <input type="text" id="className" placeholder="E2-1-2" />
+        </div>
+        <button onclick="handleSearch()">Find</button>
     </div>
 
     <div id="labForm" style="display:none;">
@@ -43,8 +237,6 @@
             <option value="E5-L-1">Auditorium C (E5-L-1)</option>
         </select>
     </div>
-
-    <button onclick="handleSearch()">Find</button>
 
     <div id="floorMapContainer">
         <div id="floorContent">
