@@ -29,7 +29,7 @@
     <div id="labForm" style="display:none;">
       <label for="labList">Choose a Lab:</label>
       <select id="labList">
-        <option value="E2-1-2">Lab A (E2-1-2)</option>
+        <option value="GPCL">General Purpose Computer Lab (GPCL)</option>
         <option value="E1-2-1">Lab B (E1-2-1)</option>
         <option value="E0-1-1">Lab C (E0-1-1)</option>
       </select>
@@ -38,8 +38,9 @@
     <div id="auditoriumForm" style="display:none;">
       <label for="auditoriumList">Choose an Auditorium:</label>
       <select id="auditoriumList">
-        <option value="AUD-A">Main Auditorium (AUD-A)</option>
-        <option value="AUD-B">Auditorium B (AUD-B)</option>
+        <option value="AUD-M">Main Auditorium </option>
+        <option value="AUD-B">Auditorium A </option>
+        <option value="AUD-C">Auditorium B </option>
       </select>
     </div>
 
@@ -48,6 +49,8 @@
       <select id="examHallList">
         <option value="EXAM-1">Exam Hall 1 (EXAM-1)</option>
         <option value="EXAM-2">Exam Hall 2 (EXAM-2)</option>
+        <option value="EXAM-3">Exam Hall 3 (EXAM-2)</option>
+        <option value="EXAM-4">Exam Hall 4 (EXAM-2)</option>
       </select>
     </div>
 
@@ -70,10 +73,13 @@
       "E1-2-1": { building: "E1", floor: 2, x: 400, y: 250 },
       "E0-1-1": { building: "E0", floor: 1, x: 200, y: 150 },
       "E5-2-2": { building: "E5", floor: 2, x: 350, y: 220 },
-      "AUD-A": { building: "E4", floor: 1, x: 180, y: 120 },
-      "AUD-B": { building: "E3", floor: 2, x: 220, y: 180 },
-      "EXAM-1": { building: "E2", floor: 3, x: 280, y: 230 },
-      "EXAM-2": { building: "E1", floor: 3, x: 240, y: 200 }
+      "AUD-M": { building: "E3", floor: 2, x: 180, y: 120 },
+      "AUD-A": { building: "E2", floor: 1, x: 180, y: 120 },
+      "AUD-B": { building: "E2", floor: 2, x: 220, y: 180 },
+      "EXAM-1": { building: "E1", floor: 3, x: 280, y: 230 },
+      "EXAM-2": { building: "E1", floor: 4, x: 240, y: 200 },
+      "EXAM-3": { building: "E0", floor: 4, x: 240, y: 200 },
+      "EXAM-4": { building: "E0", floor: 4, x: 240, y: 200 }
     };
 
     const buildingLocations = {
